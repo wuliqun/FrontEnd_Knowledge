@@ -1,0 +1,506 @@
+DOM Document Object Model
+	一系列的api规范，JS的子集
+	分为四部分
+		DOM core  核心
+		DOM HTML  页面结构
+		DOM Style 样式操作
+		DOM Event 事件处理
+
+节点遍历
+	节点类型  
+		ELEMENT_NODE  //元素节点
+		TEXT_NODE  //文本节点
+		COMMENT_NODE   //注释
+		DOCUMENT_TYPE_NODE  //文档
+	node.nodeType
+		1 元素   2 属性   3 文本  8 注释   ...
+	node.parentNode
+		.first/lastChild  //IE6 7 8获取元素节点，其他浏览器为文本或元素节点
+		.previous/nextSibling   //IE6 7 8获取元素节点，其他浏览器为文本或元素节点
+		.childNodes //IE仅获取元素节点，其他获取所有节点(包括元素与文本节点)
+		.children //获取元素节点
+		.first/lastElementChild  //获取元素节点，IE6 7 8不兼容
+		.previous/nextElementSibling  //获取元素节点，IE6 7 8不兼容
+
+节点操作
+	获取节点 
+		document.getElementById('id...'); //返回node,仅能document使用
+		动态结果集
+			element.getElementsByTagName('');
+				getElementsByTagName('*');可以获取元素所有的后代元素节点
+			element.getElementByClassName('');//可传入空格分割的多个className，顺序无关
+				IE6 7 8 不兼容
+		静态结果集
+			element.querySelector/All('selector');
+				IE6 7 不兼容，IE8部分兼容
+
+	创建节点
+		document.createElement('tagName');
+
+	修改节点
+		element.textContent   //返回去掉标签后的文本内容，IE9-不支持
+		element.innerText  //与textContent类似，但不规范，FF不支持
+
+		插入节点
+			element.appendChild(child);
+			element.insertBefore(newChild,referenceChild);
+				在referenceChild前插入newChild
+
+		删除节点
+			element.removeChild(child);
+			child.parentNode.removeChild(child);
+
+		innerHTML
+			直接修改内部的HTML代码，省去创建、插入节点的麻烦
+			易导致内存泄漏，安全问题（XSS）
+			innerHTML+='...',慎用，仅限于新创建的节点，如果在原节点上采用innerHTML+=的方式，
+				则整个节点会被刷新，会清除JS设置的事件和内置样式
+			元素需要按顺序插入节点，不然可能造成内存泄漏
+
+		属性操作
+			HTML attribute	vs	DOM property
+				input.id .type .className .htmlFor   //class for为JS关键字
+				input['id'] 
+				这样访问得到的属性是转换过得使用对象				
+			get/setAttribute();
+				input.getAttribute('class');
+				得到的是属性字符串
+				input.setAttribute('class','user act');
+			dataset   data-xxx属性集合
+				<div data-id='256' data-account-name='account'></div>
+				div.dataset -->  {id:'256',accountName:'account'};
+				可以用于保存节点的相关数据/   兼容性，低版本IE不支持
+
+		样式操作
+			<link rel='stylesheet'href='base.css'> ---> element.sheet
+			<style>...</style> /     ---> element.sheet
+			<p style='color:red'>paragraph</p>/ ---> element.style
+			整张页面的样式表 document.stylesheet
+			CSSStyleDeclaration
+				element.sheet.cssRules[1].style  element.style 
+				element.sheet.cssRules[1].selectorText  --> 获取选择器
+			样式改变
+				内嵌style
+					element.style.borderColor = 'red';
+					element.style.color = '#111';  //一句只能写一种样式
+					element.style.cssText = 'border-color:red;color:#111;';//可一句写多个样式
+				改变class   推荐使用
+					element.className += ' invalid';
+				更换样式表   一次性更新很多元素的样式，如切换背景
+					改变link的href属性
+					skinLink.href = 'summerSkin.css';
+			获取样式
+				element.style   只能获取元素的内嵌样式
+				var style = window.getComputedStyle(element);//返回只读的，元素渲染后的属性
+				IE9- 使用element.currentStyle  兼容
+
+事件流
+	capture phrase  从window->document->...->元素
+	target phrase  触发事件的元素，低版本浏览器没有实现此阶段
+	bubble phrase  从触发元素往上冒泡
+
+事件注册和触发
+	注册
+		eventTarget.addEventListener(type,listener[,useCapture]);//type不包含on
+		var listener = function(e){/*todo */};
+		eventTarget.removeEventListener(type,listener[,useCapture]);
+		element.onclick = function(e){/*todo */} //只能注册一个，后面的会覆盖前面的
+		element.onclick = null; //即可解绑事件
+		IE6 7 8 不兼容，使用
+			eventTarget.attachEvent/detachEvent(type,listener); // type包含on，没有捕获阶段
+	触发
+		eventTarget.dispatchEvent(type);
+		eventTarget.fireEvent(type); //兼容IE6 7 8
+	事件对象  event
+		IE兼容  event = event || window.event
+		属性type  target/srcElement(事件源)  currentTarget(处理事件的对象)
+	阻止事件传播
+		阻止冒泡
+			event.stopPropagation();	    W3C
+			event.cancelBubble = true;  	IE低版本兼容
+		阻止当前节点后续事件、阻止冒泡
+			event.stopImmediatePropagation()
+			浏览器兼容情况  FireFox>=10  Chrome Opera Safari IE>=9
+		阻止默认行为
+			event.preventDefault();		W3C
+			event.returnValue = false;	IE低版本兼容
+
+事件类型 (缩进表示继承关系)
+	Event  (load unload error select abort)
+		UIEvent	(resize scroll)
+			FocusEvent (blur focus focusin focusout)
+			InputEvent (beforeinput input)
+			KeyboardEvent (keydown keyup)
+			MouseEvent (click dbclick mousemove mouseover mousedown mouseup...)
+				WheelEvent (wheel)
+
+事件代理
+	将事件注册到元素的父节点上，减少事件的注册次数
+
+ajax
+	XHR
+		属性
+			readyState
+				0	初始
+				1	调用了 open()
+				2	调用了 send()
+				3	服务器开始响应
+				4	接收服务器响应完成，请求结束
+			status
+				200  300  304 ...
+			responseText
+		open() 之后可以调用 xhr.setRequestHeader(header,value)
+			发送表单示例
+				xhr.open('POST',url);
+				xhr.setRequestHeader('Content-Type','application/x-www-form-urlencode');
+				xhr.send(formData);
+		xhr.onload
+			该事件仅在status为200，readyState为4时触发
+	XHR同源策略，相同协议、主机、端口号，则为同源，不同源不能用ajax通信
+
+序列化
+	function sserialize(data){
+		if(!data) return '';
+		var pairs = [];
+		for(var name in data){
+			if(!data.hasOwnProperty(name)) continue;
+			if(typeof data[name] === 'function') continue;
+			var value = data[name].toString();
+			name = encodeURIComponent(name);
+			value = encodeURIComponent(value);
+			pairs.push(name + '=' + value);
+		}
+		return pairs.join('&');
+	}
+
+跨域方法
+	CORS  Cross-Origin Resource Sharing  跨域资源共享
+		CORS是一个W3C标准，允许浏览器向跨源服务器，发出XMLHttpRequest请求，从而克服了AJAX只能同源使用的限制。
+		CORS需要浏览器和服务器同时支持。它的通信过程，都是浏览器自动完成，不需要用户参与。
+		对于开发者来说，CORS通信与同源的AJAX通信没有差别，代码完全一样。
+		浏览器一旦发现AJAX请求跨源，就会自动添加一些附加的头信息，有时还会多出一次附加的请求，但用户不会有感觉。
+		因此，实现CORS通信的关键是服务器。只要服务器实现了CORS接口，就可以跨源通信。
+		如服务器设置如下
+			//指定允许其他域名访问
+			'Access-Control-Allow-Origin:*'//或指定域
+			//响应类型
+			'Access-Control-Allow-Methods:GET,POST'
+			//响应头设置
+			'Access-Control-Allow-Headers:x-requested-with,content-type'
+
+
+	document.domain   修改document.domain来跨子域
+		把www.example.com/a.html和example.com/b.html这两个页面的document.domain都设成相同的域名就可以
+		document.domain只能设置成自身或更高级的父域，因而以上只能设置成document.domain = example.com
+		通信示例：
+			页面a
+				<iframe id="iframe" src="http://example.com/b.html" onload = "test()"></iframe>
+				<script type="text/javascript">
+				    document.domain = 'example.com';//设置成主域
+				    function test(){
+				        alert(document.getElementById('iframe').contentWindow);//contentWindow 可取得子窗口的 window 对象
+				    }
+				</script>   /
+			页面b
+				<script type="text/javascript">
+				    document.domain = 'example.com';//在iframe载入这个页面也设置document.domain，使之与主页面的document.domain相同
+				</script>       /
+
+
+	JSONP
+		通过用<script>标签引入外链，获取跨域数据。
+		由于script标签内部必须是可执行JS文件，所以JSONP方式需要服务器端做响应的配合。如：
+		client
+			<script scr='http://example.com/data.php?callback=dosomething'></script>  /
+		server
+			<?php
+			$callback = $_GET['callback'];//获取回调函数名
+			$data = array('a','b','c');//要处理的数据
+			echo $callback.'('.json_endoce($data).');';
+			?>
+		这样客户端的页面就相当于
+			<script>dosomething(['a','b','c']);</script>  /
+		本地函数处理了跨域的信息，需要服务器端配合
+
+	web sockets
+		web sockets是一种浏览器的API，它的目标是在一个单独的持久连接上提供全双工、双向通信。(同源策略对web sockets不适用)
+		原理：在js创建了web socket之后，会有一个HTTP请求发送到浏览器以发起连接。
+			  取得服务器响应后，建立的连接会使用HTTP升级从HTTP协议交换为web sockt协议。
+		只有在支持web socket协议的服务器上才能正常工作。 !important
+		示例:
+			var socket = new WebSockt('ws://www.baidu.com');//http->ws; https->wss
+			socket.send('hello WebSockt');
+			socket.onmessage = function(event){
+			    var data = event.data;
+			}
+
+Cookie
+	function getCookie(){
+		var cookie = {};
+		var all = document.cookie;
+		if(all === '') return cookie;
+		var list = all.split('; ');
+		for(var i = 0;i < list.length;i++){
+			var item = list[i];
+			var p = item.indexOf('=');//不用split，因为cookie值中可以包含=
+			var name = item.substring(0,p);
+			name = decodeURIComponent(name);
+			var value = item.substring(P+1);
+			value = decodeURIComponent(value);
+			cookie[name] = value;
+		}
+		return cookie;
+	}
+
+	document.cookie = 'name=value';//会自动添加cookie，而不是赋值，且重名不会覆盖
+
+	function setCookie(name,value,expires,path,domain,secure){
+		var cookie = encodeURIComponent(name) + '=' + encodeURIComponent(value);
+		if(expires)
+			cookie += '; expires=' + expires.toGMTString();
+		if(path)
+			cookie += '; path=' + path;
+		if(domain)
+			cookie += '; domain=' + domain;
+		if(secure)
+			cookie += '; secure=' + secure;
+		document.cookie = cookie;
+	}
+
+Storage   HTML5特性
+	Local Storage  5MB大小  永久存储
+		作用域(同协议、主机、端口)
+	Session Storage 浏览器回话时存在
+		作用域(同窗口、协议、主机、端口)，同一浏览器不同窗口间不能共享
+
+	localStorage.length;    //键值对的数量
+	localStorage.getItem('name');  //根据键名取值
+	localStorage.key(i);    //按顺序取键名
+	localStorage.setItem('name',value);//添加或修改
+	localStorage.removeItem('name');//删除
+	localStorage.clear();   //清空
+	用cookie做兼容的api
+
+JS动画
+	var id = setInterval(func,delay);  //一直执行
+	clearInterval(id);  //清除定时，不再执行
+
+	var id = setTimeout(func,delay);//只执行一次
+	clearTimeout(id);
+
+	var id = requestAnimationFrame(func); //间隔时间由显示器刷新间隔确定，一般为16.67ms
+	cancelAnimationFrame(id);//清除
+
+音、视频
+	<audio src='music.mp3'></audio>
+	<video src='movie.mov' width=320 height=240></video>
+	兼容写法
+		<audio>
+			<source src='music.mp3' type='audio/mpeg'>
+			<source src='music.wav' type='audio/x-wav'>
+			<source src='music.ogg' type='audio/ogg'>
+		</audio> // type可选，写上更有利于浏览器解析
+		video也是类似作兼容
+
+	var a = new Audio(); //检测是否支持该标签
+	a.canPlayType('audio/x-wav');
+		'maybe'  'probably'   支持
+		''  				  不支持
+	video不能使用构造函数，只能写在页面上然后获取
+
+	操作
+		load()     //加载媒体内容
+		play()    //播放
+		pause()	 //暂停
+	属性
+		playbackRate	//播放速度
+		currentTime		//播放进度
+		volume			//音量
+		muted			//是否静音 boolean
+		paused			//是否暂停 boolean
+		seeking			//跳转
+		ended			//是否完成播放 boolean
+		duration		//总时长
+		initialTime		//开始从哪个位置播放
+	事件
+		loadstart		//开始请求媒体内容
+		loadmetadata	//媒体元数据已加载完成
+		canplay 		//加载了一些内容，可以开始播放
+		play 			//调用了play()或设置了autoplay，且媒体开始播放
+		waiting			//缓冲数据不够，暂停播放并缓存
+		playing			//正在播放
+
+canvas
+	<canvas id='tutorial' width=300 height=300></canvas> /
+	canvas默认宽高为300 150，也可以CSS设置，但不建议，建议直接写在标签上
+	因为CSS和JS可能有时差，可能会影响图像显示效果
+
+	var canvas = document.getElementById('tutorial');
+	var ctx = vanvas.getContext('2d'); //绘画笔，关键
+
+BOM Browser Object Module
+	navigator   浏览器信息
+		navigator.platform   //运行平台
+		navigator.userAgent  //浏览器客户端
+	location  定位与导航
+		location.href  可以设置跳转页面，直接给location赋值也是一样
+		location.assign(url)
+			载入新url，记入浏览历史
+		location.replace(url)
+			载入新url，不记入浏览历史
+		location.reload()
+			重载当前页面
+	history  当前窗口的历史信息
+		back(num)
+		forward(num)
+		go(num)
+			正数前进，负数后退
+	screen
+		availHeight   availWidth   浏览器可用宽高，没有最大化也不影响
+		width height 显示屏宽高
+window事件
+	load   			文档和所有图片加载完成时触发
+	unload 			离开当前文档时触发，刷新也算
+	beforeunload	和unload类似，但提供用户是否确认离开的机会，回调函数返回false即不离开
+	resize			拖动改变浏览器窗口大小时触发
+	scroll			拖动滚动浏览器是触发
+
+表单
+	<form>
+		<p><label>姓名:<input></label></p>
+		<p><label>电话:<input type='tel'></label></p>
+		<p><label>邮箱:<input type='email'></label></p>
+		<fieldset> //一系列的单选按钮放在fieldset组合中
+			<legend>披萨大小</legend>
+			<p><label><input type='radio'>小</label></p>
+			<p><label><input type='radio'>中</label></p>
+			<p><label><input type='radio'>大</label></p>
+		</fieldset>
+		<p><label>配送时间:<input type='time' min='11:00' max='21:00' step='900'></label></p>
+		<p><button type='submit'>提交订单</button></p>
+	</form>   /
+	
+	form
+		method  get  post
+		action  url
+		enctype // 编码方式	
+		配置表单，根据接口配置参数的name，以及form的method，url，enctype
+
+	表单验证
+		必填项加上required，没填的话不能提交，会自动提示
+
+form属性
+	name   			可使用 document.forms.name 直接获取该表单
+	autocomplete 	on/off 是否需要输入提示
+		off有时会失效，解决办法：设置autocomplete为无效值，浏览器会放弃解析该属性，如autocomplete='no'
+	elements 动态节点集合
+		form的子孙表单控件
+			button fieldset input select textarea等，图片按钮(<input type='image'>)除外
+		归属于表单的表单控件
+			<form id='f'>...</form>
+			<p><label><input name='c' form='f'></label></p>  /该input即归属于表单form#d
+	length   === elements.length
+
+获取表单元素
+	四种方法可以获取
+		form.elements[index]
+		form.elements[name]
+		form[index]
+		form[name]
+			--返回id或name为指定名称的表单控件，除图片按钮
+			--如果结果为空，则返回id为指定名称的img元素
+			--如果多个同名元素，则返回动态节点集合
+			--一旦使用该方法获取过元素，则不管该元素的id或name如何变化，只要节点还在，均可使用原名称获取该元素
+				form['a'].name = 'else'  //修改input[name='a']的name属性
+				form['a']  //仍然可以获取到该元素
+				form.elements['a']  //null ,因为elements是动态集合
+
+form.reset()
+	--可重置元素 input keygen output select textarea
+	--触发表单的reset事件，阻止事件默认行为可取消重置
+	--元素重置时不触发change input事件
+
+	<input type='file' name='image'>
+		若已选择，则不可用 form['image'].value='';清空已选择文件，用reset()可以清空
+
+label
+	htmlFor
+		关联表单控件的激活行为
+			可关联元素
+				button input(hidden除外) keygen meter output progress select textarea 
+			示例：
+				<form class='f-hidden'> //隐藏表单，不可见
+					<input id='file' name='image' type='file'>
+				</form>
+				<label for='file' class='upload'>选择文件</label> //与input关联起来，这样可以设置个性化样式，更友好
+	control   label所关联的表单控件
+		--如果指定了for属性，则为for属性对应id的可关联元素
+		--未指定for属性，则为第一个子孙可关联元素
+	form    归属表单
+		只读属性，不可修改
+		label.setAttribute('form',''),这样才能修改
+
+input
+	type  设置控件外观，数据类型，默认text
+	onchange  事件
+	accept    接受类型
+	multiple  多选选项,出现即表示支持多选
+
+	<input type='file' accept='image/*' multiple>
+		accept：'audio/*' 'video/*' 'image/*' 不带;的MIME类型 以.开始的文件后缀名
+			多个accept以,分隔
+
+select
+	name
+	value
+	multiple
+	options
+	selectOptions
+	selectIndex
+	add(element[,before])
+	remove(index)
+
+	new Option()  document.createElement('option') 均可创建option
+
+表单验证
+	可验证元素
+		button input select textarea
+	以下情况不做验证
+		input[type='[hidden|reset|button]']
+		buttom[type='[reset|button]']
+		input/textarea && readonly
+		作为datalist的子孙节点
+		disabled
+	验证的属性&接口
+		element.willValidate   		//表单提交时是否验证
+			   .checkValidity() 	//调用改接口定义验证信息
+			   .validity     		//验证结果
+			   		customError		//设置为 true, 如果设置了自定义的 validity 信息。
+					patternMismatch	//设置为 true, 如果元素的值不匹配它的模式属性。
+					rangeOverflow	//设置为 true, 如果元素的值大于设置的最大值。
+					rangeUnderflow	//设置为 true, 如果元素的值小于它的最小值。
+					stepMismatch	//设置为 true, 如果元素的值不是按照规定的 step 属性设置。
+					tooLong			//设置为 true, 如果元素的值超过了 maxLength 属性设置的长度。
+					typeMismatch	//设置为 true, 如果元素的值不是预期相匹配的类型。
+					valueMissing	//设置为 true，如果元素 (required 属性) 没有值。
+					valid			//设置为 true，如果元素的值是合法的。
+			   .validationMessage  //验证消息
+			   .setCustomValidityMessage(msg) //自定义验证消息，如错误信息
+
+	在form上添加novalidate属性可禁止表单默认验证，且只能用于form
+	表单元素禁止验证可以借助javascript的blur和focus事件，绕过该表单元素的验证。即失焦的时候设为只读，这种情况是不做验证的
+
+表单提交
+	隐式提交
+		输入框内回车自动提交
+			--有没有被禁用的提交按钮
+			--仅有一个表单字段
+	无刷新表单提交
+		ajax
+		iframe代理
+
+
+  
+
+ 
+

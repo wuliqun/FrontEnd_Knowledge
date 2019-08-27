@@ -1,0 +1,396 @@
+vue 极简的MVVM框架
+	响应的数据绑定和组合的视图组件
+
+	新建vue实例
+		var vm = new Vue(options);
+			options:{el:'元素',data:{数据}}
+			data中属性会自动赋予vm
+	绑定文本内容
+		{{message}}   //option.data.message
+			//修改vm.message 可看到页面变化
+	绑定元素属性
+		v-bind:title="message"
+			//会用option.data.message替换title的值
+	条件与循环
+		<p v-if="seen">show this node</p>
+
+		<div id="xx">
+		  <ol>
+		    <li v-for="todo in todos">
+		      {{ todo.text }}
+		    </li>
+		  </ol>
+		</div>
+	监听事件
+		v-on:click="reverseMessage"
+		//options.methods.reverseMessage   'function'
+		//事件内部的this指向新建的vue实例
+	表单与数据绑定
+		v-model="message"
+			//value = vm.message   vm.message = value   双向绑定
+	组件
+		Vue.component('todo-item', {
+		  // The todo-item component now accepts a
+		  // "prop", which is like a custom attribute.
+		  // This prop is called todo.
+		  props: ['todo'],
+		  template: '<li>{{ todo.text }}</li>'
+		})
+
+Vue实例
+	所有的Vue组件都是扩展的Vue实例
+	实例的属性和方法 均以$开头
+		vm.$data   //options.data
+		vm.$el     //节点对象
+		vm.$watch('a',function(newVal,oldVal){
+			//这个方法将在 vm.a 改变时触发
+		});
+			//$.watch 返回一个停止观察函数，如
+			//var unwatch = vm.$watch('a',function(newVal,oldVal){});
+			//unwatch(); 停止观察
+		vm.$options  //创建实例时的options
+		vm.$parent   //父实例，如果有的话
+		vm.$root     //组件树的根实例，如果当前组件没有父实例，则为自己
+		vm.$children //直接子组件，[] 一个数组
+		...
+	实例的生命周期
+		每个 Vue 实例在被创建之前都要经过一系列的初始化过程。
+		例如，实例需要配置数据观测(data observer)、编译模版、挂载实例到 DOM ，然后在数据变化时更新 DOM。
+		在这个过程中，实例也会调用一些 生命周期钩子 ，这就给我们提供了执行自定义逻辑的机会。
+		例如，created 这个钩子在实例被创建之后被调用：
+			var vm = new Vue({
+			  data: {
+			    a: 1
+			  },
+			  created: function () {
+			    // `this` 指向 vm 实例
+			    console.log('a is: ' + this.a)
+			  }
+			})
+		其他生命周期方法还有：mounted、 updated 、destroyed  ,均伴有beforeXxx方法
+			mounted：实例初始化时没有指定el，则处于未挂载状态，可以手动使用vm.$mount(elementOrselector)挂载
+					 如果$mount未传递参数，则实例渲染在文本之外，需使用原生JS加入文档中
+
+模板语法
+	插值  {{}}  mustache
+		可使用v-once一次性插值，不再更新
+			<div v-once>{{msg}}</div>  //  vm.msg改变不会触发该元素内容更新
+	插HTML, {{}} 会解释为纯文本，不保留HTML，要插入HTML，使用v-html
+		<div v-html="rawHtml"></div>
+		// 数据绑定会被取消
+	属性
+		v-bind   
+			<button v-bind:disabled="condition">a button</button>
+			// disabled之类的属性也可以，如果内容取值为false，将取消disable
+	使用表达式
+		插值可以使用js表达式，如
+			{{ number + 1 }}
+			{{ ok ? 'YES' : 'NO' }}
+			{{ message.split('').reverse().join('') }}
+			<div v-bind:id="'list-' + id"></div>
+		仅限表达式，不能使用语句 /
+	过滤器
+		过滤器是一个函数，如
+			{{message|capitalize}}
+			new Vue({
+			  // ...
+			  filters: {
+			    capitalize: function (value) {
+			      if (!value) return ''
+			      value = value.toString()
+			      return value.charAt(0).toUpperCase() + value.slice(1)
+			    }
+			  }
+			})
+		过滤器可以接受更多参数，如
+			{{message|filter('args1',args2)}}  ,'args1'是第二个参数，args2第三个
+	指令 v-
+		参数
+			<a v-bind:href="url"></a>
+			<a v-on:click="doSomeThing"></a>
+		修饰符
+			<form v-on:submit.prevent="onSubmit"></form>
+				// 阻止submit默认事件的修饰符
+		缩写
+			v-bind可省略  <a v-bind:href="url"></a>等价<a :href="url"></a>
+			v-on缩写 <a v-on:click="doSomeThing"></a>等价<a @click="doSomeThing"></a>
+	计算属性
+		<div id="example">
+		  {{ message.split('').reverse().join('') }}
+		</div>
+		//可以这么写，但是维护复杂，可以使用计算属性
+		<div id="example">
+		  {{ reverseMessage }}
+		</div>                  /
+		var vm = new Vue({
+		  el: '#example',
+		  data: {
+		    message: 'Hello'
+		  },
+		  computed: {
+		    // a computed getter
+		    reversedMessage: function () {
+		      // `this` points to the vm instance
+		      return this.message.split('').reverse().join('')
+		    }
+		  }
+		})
+	计算属性的setter
+		计算属性默认只有getter，但可以指定setter
+			// ...
+			computed: {
+			  fullName: {
+			    // getter
+			    get: function () {
+			      return this.firstName + ' ' + this.lastName
+			    },
+			    // setter
+			    set: function (newValue) {
+			      var names = newValue.split(' ')
+			      this.firstName = names[0]
+			      this.lastName = names[names.length - 1]
+			    }
+			  }
+			}
+		使用 vm.fullName = '...',赋值时会触发setter
+	观察
+		计算属性很有用，但异步操作应放入观察中，$watch
+
+Class 与 Style 绑定
+	绑定class
+		<div v-bind:class="{ active: isActive }"></div>  /
+			div元素是否有active类名，取决于isActive是否为真值，
+		可同时绑定多个
+			<div v-bind:class="{ active: isActive,'text-danger':hasError }"></div>  /
+				text-danger 需要加上单引号，因为不符合js规范
+		也可以直接绑定一个对象,或者绑定返回对象的计算属性
+			<div v-bind:class="classObj"></div>  /
+			data:{
+				classObj:{
+					active:false,
+					'text-danger':true
+				}
+			}
+		数组语法
+			<div v-bind:class="[activeClass, errorClass]">
+			data: {
+			  activeClass: 'active',
+			  errorClass: 'text-danger'
+			}
+			也可
+				<div v-bind:class="[isActive ? activeClass : '', errorClass]">
+				<div v-bind:class="[{ active: isActive }, errorClass]">
+	绑定内联样式
+		<div v-bind:style="{ color: activeColor, fontSize: fontSize + 'px' }"></div>
+		<div v-bind:style="styleObject"></div>
+		<div v-bind:style="[baseStyles, overridingStyles]">
+			vue会自动侦测并添加前缀
+
+条件渲染
+	v-if
+		<h1 v-if="ok">Yes</h1>
+		<h1 v-else>No</h1>      //可以没有
+	template v-if
+		同时包含多个元素，template不会出现在文档中
+		<template v-if="ok">
+		  <h1>Title</h1>
+		  <p>Paragraph 1</p>
+		  <p>Paragraph 2</p>
+		</template>
+	v-show
+		<h1 v-show="ok">Hello!</h1>
+		v-show元素始终在文档中，vue仅切换display属性
+		v-show不能用于template
+
+	v-if  vs  v-show
+		v-if 有更高的切换消耗，v-show有更高的渲染消耗
+		如果运行时条件不大可能改变，用v-if
+
+列表渲染   //
+	v-for
+		<ul id="example-1">
+		  <li v-for="item in items">
+		    {{ item.message }}
+		  </li>
+		</ul>
+		var example1 = new Vue({
+		  el: '#example-1',
+		  data: {
+		    items: [
+		      {message: 'foo' },
+		      {message: 'Bar' }
+		    ]
+		  }
+		})
+		支持索引
+		 <li v-for="(item, index) in items">         
+		可以用of替代 in
+	template v-for
+		<ul>
+		  <template v-for="item in items">
+		    <li>{{ item.msg }}</li>
+		    <li class="divider"></li>
+		  </template>
+		</ul>
+	迭代对象
+		<li v-for="i in obj">
+			{{ i }}
+		</li>          /
+		v-for="(value,key) in obj"
+		v-for="(value,key,index) in obj"
+	整数迭代
+		v-for="n in 10"   // --->   1 2 3 ... 8 9 10    notice!!
+	组件和v-for
+		<my-component v-for="item in items"></my-component>
+		然而数据不能直接传递到组件，因为组件有独立的作用域，需要通过props传递
+			<my-component
+			  v-for="(item, index) in items"
+			  v-bind:item="item"
+			  v-bind:index="index">
+			</my-component>
+	数组渲染
+		vm.items[index] = newValue;
+		vm.items.length = newLength;
+		并不会触发更新，需使用
+		Vue.set(vm.items,index,newValue);
+		vm.items.splice(index,1,newVal);
+		vm.items.splice(newLength)
+	对象渲染
+		Vue.set(obj,key,value);
+
+事件
+	事件方法中要访问event
+		@click="greet('hi',$event)"
+	事件修饰符
+		.stop		阻止事件冒泡
+		.prevent	阻止默认行为
+		.capture	捕获，元素先处理，然后再交给子元素
+		.self		仅元素自身触发的事件才生效
+		.once 		仅执行一次
+		.passive	
+	键盘事件
+		keycode别名
+			enter  tab  delete （delete和backspace）
+			esc    space  up   down   left   right
+		可以通过全局的 config.keyCodes设置别名
+			Vue.config.keyCodes.f1 = 12;   //为键码12设置别名f1
+		系统修饰符
+			.ctrl  .alt   .shift   .meta 
+			@keyup.ctrl.67    // ctrl + C
+			@click.ctrl       // 带ctrl点击
+		修饰符与按键不同
+			事件触发时，ctrl必须处于按下状态，也就是说，只有在按住ctrl的情况下释放按键才生效
+		.exact系统修饰符  精确控制系统修饰符
+			@click.ctrl.exact 有且仅有ctrl按下时生效
+			@click.exact   没有任何系统修饰符按下时生效
+
+表单控件绑定
+		v-model 创建双向数据绑定
+	复选框
+		<input type="checkbox" id="checkbox" v-model="checked">
+		<label for="checkbox">{{ checked }}</label>
+		多个复选框用[]装值
+	select 
+		v-for   //  不可以动态指定multiple
+	修饰符   v-model.
+		.lazy   输入框原本为input同步，加上lazy变成change同步
+		.number	限定输入为数值
+		.trim   删除首尾空格
+
+组件
+	注册组件
+		全局注册
+			Vue.component(tagName,options);  //注册一个全局组件
+			组件注册之后，便可以在父元素中以自定义元素的形式使用。实例化父元素时，要保证已经注册组件
+		局部注册
+			不必在全局注册每个组件。通过使用组件实例选项注册，可以使组件仅在另一个实例/组件的作用域中可用：
+			var Child = {
+			  template: '<div>A custom component!</div>',
+			  props:[]
+			}
+			new Vue({
+			  // ...
+			  components: {
+			    // <my-component> 将只在父模板可用
+			    'my-component': Child
+			  }
+			})
+	data必须是函数
+		组件的data必须是函数，因为可能会生成多个组件，为保证data独立，data必须是函数
+
+	构成组件，父子组件间消息传递
+		props down &  events up
+			父组件向子组件传递数据，子组件向上传递事件
+		props
+			组件实例的作用域是孤立的，因此子组件不能访问父组件的作用域，可以使用props将数据传递给子组件
+			Vue.component('child', {
+			  // 声明 props
+			  props: ['message'],
+			  // 就像 data 一样，prop 可以用在模板内
+			  // 同样也可以在 vm 实例中像 “this.message” 这样使用
+			  template: '<span>{{ message }}</span>'
+			})
+			<child :message="someMessage"></child>           ///父组件中使用
+
+			单向数据流，组件props的数据流是单向的，父组件中props变化会反映到子组件中
+			反向则不行，这是为了防止子组件对父组件恶意篡改
+
+	组件模板必须是单个根元素
+
+	监听子组件事件
+		父组件使用子组件时，绑定v-on:xxx,xxx为函数，在父组件中定义
+		在子组件中可以使用@click="$emit(xxx)",触发该函数
+		可以传值
+
+VueRouter
+	下载 vue-router.js，用script引入页面
+	创建一个vue-router对象
+	配置路由对象，哪些路由页面
+	安装插件
+	将配置好的路有对象交给vue实例
+	指定路由改变局部的位置
+	代码：
+		Vue.use(VueRouter);//安装插件
+		var routet = new VueRouter({
+			routes:[
+				{
+					name:'login', //可选，写了名称方便后面使用
+					path:'/login',
+					component:Login //需自己定义
+				}
+			]     //配置路由
+		});
+		var App = {
+			template:`<div>
+				<router-link to="/login">LOGIN</router-link>
+				<router-link :to="{name:'login'}">LOGIN</router-link>  <!--针对有名字的路由对象-->
+				<router-link to="/register">SIGN IN</router-link>
+				<router-view></router-view>
+			</div>`
+		}
+		new Vue({
+			el:'#app',
+			router:router, //关联router到vue实例
+			components:{
+				app:App
+			},
+			template:`<app/>`
+		})
+	router-link传递参数：
+		this.$router.push({ name: 'news', params: { userId: 123 }})
+		接收
+			this.$route.params.userId
+		this.$router.push({ path: '/news', query: { userId: 123 }});
+		接收
+			this.$route.query.userId
+
+		<router-link :to="{ name: 'news', params: { userId: 1111}}">click to news page</router-link>
+
+		<router-link :to="{ path: '/news', query: { userId: 1111}}">click to news page</router-link>
+
+		
+
+
+
+
+

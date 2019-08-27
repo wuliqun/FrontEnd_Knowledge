@@ -1,0 +1,23 @@
+A 云服务器使用
+	1.腾讯云服务，先重置密码，再登录，目前登录密码与QQ相同
+	2.下载putty，使用putty登录服务器。
+		下载安装putty。https://www.putty.org
+		页面点击SSH秘钥，下载生成的私钥
+		打开puttygen.exe，load私钥，选择所有文件
+		更改key comment,save private key,xxx.ppk, passpharse  liqun
+		打开putty，SSH-Auth，导入.ppk
+		配置公网Ip，设置session名，即可登录
+
+B部署java tomcat
+	1.安装jdk
+		yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel
+		添加环境变量  etc/profile
+			export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.121-0.b13.el7_3.x86_64
+			export CLASSPATH=.:$JAVA_HOME/jre/lib/rt.jar:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+			export PATH=$PATH:$JAVA_HOME/bin
+	
+本地java项目部署到远程服务器根目录
+	将整个项目export成WEB -> war文件
+	pscp上传到远程服务器webapps目录
+	在tomcat/conf/server.xml文件中，在<Host>下面添加
+		<Context path="" docBase="../webapps/liqun91.top" debug="0" reloadable="true" />，重启tomcat

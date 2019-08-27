@@ -1,0 +1,50 @@
+webpack
+	前端资源加载/打包工具。它将根据模块的依赖关系进行静态分析，
+	然后将这些模块按照指定的规则生成对应的静态资源。
+
+安装
+	首先安装node.js，node -v, npm -v 查看是否安装成功
+	添加NODE_PATH系统变量，变量值为C:\Users\wuliqun\AppData\Roaming\npm\node_modules
+	安装cnpm 国内npm镜像，加快npm安装速度。 npm install -g cnpm --registry=https://registry.npm.taobao.org
+	安装webpack： cnpm install webpack -g
+		cnpm install webpack-cli -g
+	项目文件夹目录下npm init
+
+使用
+	webpack filename newFilename
+
+	一个文件中module.exports = obj; , 另一个文件 var obj = require("filepath1"); 既可以获得1输出的obj
+	webpack会根据这种关系自动加载文件
+
+	出错 module not found error，解决
+		webpack-cli filepath --output newFilepath
+
+	webpack 根据模块的依赖关系进行静态分析，这些文件(模块)会被包含到 bundle.js 文件中。Webpack 会给每个模块分配一个唯一的 id 并通过这个 id 索引和访问模块。 在页面启动时，会先执行 runoob1.js 中的代码，其它模块会在运行 require 的时候再执行。
+
+Loader
+	Webpack 本身只能处理 JavaScript 模块，如果要处理其他类型的文件，就需要使用 loader 进行转换。
+	要添加CSS，需要安装CSS_Loader style_loader。  cnpm install css-loader style-loader
+	css_loader 会遍历css文件，找到其中url()并处理，base64编码
+	style_loader会将css文件插入到页面的style标签中
+	在js文件中，require CSS 文件的时候都要写 loader 前缀 !style-loader!css-loader!
+		require('!style-loader!css-loader!./style.css')
+	也可以根据模块类型（扩展名）来自动绑定需要的 loader
+		require('./style.css')
+		webpack test.js --output bundle.js --module-bind 'css=style-loader!css-loader'
+
+配置文件
+	编译选项放在配置文件中，以便于统一管理
+	创建 webpack.config.js 文件
+		module.exports = {
+		    entry: "./test.js",   //入口
+		    output: {
+		        path: __dirname,
+		        filename: "bundle.js"   //输出
+		    },
+		    module: {
+		        loaders: [
+		            { test: /\.css$/, loader: "style-loader!css-loader" },...
+		        ]
+		    }
+		};
+

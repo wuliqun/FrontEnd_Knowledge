@@ -1,0 +1,213 @@
+Array
+	arr.forEach(callback[,thisArg]);
+		callback要求
+			var callback = function(item,index,array){};//必须有这三个参数
+		thisArg表示，如果callback中用到了this，则this指向thisArg
+	会改变原数组的数组方法
+		arr.reverse()
+		arr.sort(compareFunction)
+			var compareFunction = function(a,b){...}//两个参数比较，返回值小于0，a会排在b前面
+		arr.push() //追加元素
+		arr.unshift() //往前面添加元素
+		arr.shift()  //删除数组第一个元素并返回
+		arr.pop()  //删除数组最后一个元素并返回
+		arr.splice(index,howMany[,ele1...])//在index位置开始，删除howMany个元素，并用后面的ele1...填充进去
+	不会改变原数组的方法
+		arr.slice(begin[,end])//从begin(包含)开始到end(不包含)为止，复制出一份数组出来，并返回，原数组不变
+			arr.slice(0) //数组全部拷贝
+		arr.concat(value1,...,valueN)//连接数组
+		arr.join('--')//将数组拼接成字符串，参数为空，则默认为','
+		arr.map(callback[,thisArg])
+			会将callback返回值组成一个新数组返回
+		arr.reduce(callback,[initValue])
+			var callback = function(previousResult,item,index,array){}
+			每次调用都会得到上一个result，然后可以做叠加等操作，最后返回一个最终结果
+
+Function
+	构造函数，方法放在prototype上。如 Point.prototype.move = function(){}	
+
+Date
+	new Date(year,month[,day,hour...]);
+		month从0开始计，7表示8月
+	getFullYear() //年
+	getMonth()  //月，从0开始，0~~11
+	getDate()   //日
+	getHours() getMinutes() getSeconds()  //时分秒
+	date.toString() //格式不友好，需自己定义格式化函数
+	setFullYear() 等set方法
+	new Date(2001,2,0).getDate() //获取指定月份的天数，这是获取2月份的
+	getTime()  //返回数字，从1970-1-1 00:00:00至今的毫秒数
+
+RegExp
+	两种方式，直接量或构造函数构造
+		/pattern/attrs
+		new RegExp(pattern,attrs)
+	reg.test(str) 
+		与指定字符串是否匹配，只需str中包含reg表述的特征即为匹配
+	^ 		起始位置
+	$		结束为止
+	.		任意字符
+	{m,n}	出现m-n次
+	*:{0,}	出现任意次
+	?:{0,1}	0次或1次
+	+:{1,}	至少出现1次
+
+	/\.(jpg|png|jpeg|gif)$/  匹配图片文件啊后缀，分支的使用
+
+	捕获 ()  不捕获(?:)
+		var arr = str.match(reg)
+		arr[0] 匹配到的整串，arr[1]...arr[n] 依次的各个捕获
+
+JSON
+	属性名用“”包裹，末尾不能有空的','分隔符，1. 属于不合法数值 
+	JSON.parse(jsonStr)  将JSON字符串转成JS对象
+	JSON.stringify(obj)  将JS对象序列化成JSON字符串
+	JSON.stringify(obj,['attr1','attr2'...]) 只序列化[]中指明的部分属性
+		IE6/7 不支持JSON对象
+
+类型识别
+	typeof 操作符
+	instanceof 操作符
+		识别对象，不能识别原始类型
+	Object.prototype.toString.call()
+		1 --> "[object Number]"
+		'1' --> "[object String]"
+		可以识别所有原始类型，标准类型以及内置对象类型，不能识别自定义对象
+	constructor  undefined|null 没有constructor
+		'hello'.constructor --> String
+		function getConstructorName(obj){
+			if(obj===undefined || obj===null){
+				return ''+obj;
+			}else{
+				return obj.constructor.toString().match(/function\s*([^(]*)/)[1];
+			}
+		}
+
+函数定义
+	函数声明
+		function add(i){}  //这种形式
+		代码执行过程   预解析-->单步执行
+		函数声明式定义会在预解析的时候将声明前置，和变量声明类似，在变量声明之后
+		函数声明重复定义函数，仅最后一个有效，因为前置了，后面的覆盖了前面的
+	函数表达式
+		var add = function(i){}
+	函数实例化
+		var add = new Function('i','j','return i+j;')
+		并不遵循逐级作用域，函数仅能访问本地作用域和全局作用域
+
+调用
+	方式								this指代
+	函数调用：sum(a+b)				window
+	方法调用：point.move(x,y)		point,指向调用函数的对象,方法中内部函数的this指向window
+	构造函数：new ...				指向新构造的对象
+	apply|call模式，实现函数功能借用	指向第一个参数，原理就是将内部的this指向参数实现函数借用
+
+闭包
+	函数内部的子函数，用到了父函数的作用域，并且将子函数返回到外部，即形成闭包
+	功能
+		保存函数的执行状态
+	封装
+		构造函数实现属性隐藏，只留出操作方法接口
+	性能优化
+		避免函数重复定义造成的性能消耗
+
+First Class Function 函数本身是对象，可以作为参数、返回值等
+	Function.prototype.bind(...)
+	将函数内部的this改变，并且返回新函数，并不立即执行
+	如：
+		var move = function(i,j){this.x+=i;this.y+=j;}
+		var p = {x:1,y:2};
+		var pmove = move.bind(p) //可同时传入函数执行参数，作为参数绑定
+	curry 科里化
+		逐步传参，逐步缩小函数范围，逐步求解，实现复杂过程的分割
+
+原型和闭包
+	Object.prototype 是一个对象，但是它的__proto__为null，这是唯一的例外，不然没完没了了
+	Function instanceof Object //true
+	Function instanceof Function //true
+	Object instanceof Object //true
+	Object instanceof Function //true
+
+	函数有length属性，表示形参个数
+
+	函数在定义的时候（不是调用的时候），就已经确定了函数体内部自由变量的作用域,例：
+		var a = 10;
+		function f(){console.log(a);/*定义是已经确定，a指向全局变量*/}
+		function bar(){
+			var a = 20;
+			f();//打印全局变量10，而不是bar函数内部的20
+		}
+		bar();//10
+
+原型
+	类  		是一个抽象，可以用来构造对象，即抽象--->具体
+	原型 	具体--->具体，以现有的对象为原型，构造新对象
+		如何以原型构造对象
+			1.Object.create(proto[,properties]) //proto作为原型
+			2.构造函数，使用构造函数的prototype设置原型，生成对象都共享构造函数的prototype
+
+变量作用域
+	静态作用域 JS使用
+		作用域在函数定义是创建
+	动态作用域
+		代码执行时确认，变量栈，找离栈顶最近的变量
+	词法环境
+		JS用词法环境管理静态作用域
+		函数内部有一个outer引用指向外部环境
+
+面向对象
+	全局变量
+		可以在全局任何地方访问，定义全局变量3中方法
+			1.全局环境中用var定义变量，不能用delete删除
+			2.使用window.xx定义，可以用delete删除
+			3.直接用变量名定义，会默认变成window的属性，效果与2相同，可以用delete删除
+			function xx(){
+				var a = test = 'value'; //a是局部变量，而test变成了全局变量(window的属性)
+			}
+
+	封装 滥用全局变量易产生冲突，因此要做好封装
+		function A(){
+			var a = [1,2,3];//隐藏
+			this.getConfig = function(){
+				return a;
+			}
+		}
+
+	继承
+		类继承
+			(function(){
+				function classA(){}
+				classA.classMethod = function(){}
+				classA.prototype.api = function(){}
+
+				function classB(){
+					classA.apply(this,arguments);
+				}
+				classB.prototype = new classA();
+				classB.prototype.constructor = classB;
+				classB.prototype.api = function(){
+					classA.prototype.api.apply(this,arguments);
+				}
+
+				var b = new classB();
+				b.api();
+			})();
+		原型继承
+			(function(){
+				var proto = {
+					name:'wlq',
+					age:'28',
+					...
+				};
+				var obj = Object.create(proto);
+			})();
+			//兼容
+			var clone = (function(){
+				function F(){
+					//pass
+				}
+				return function(proto){
+					F.prototype = proto;
+					return new F();
+				}
+			})();

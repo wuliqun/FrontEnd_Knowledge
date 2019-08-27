@@ -1,0 +1,105 @@
+本地部署tomcat
+	下载tomcat-windows，解压到指定文件夹   F:/tomcat
+ 	双击 bin/startup.bat,即启动了tomcat，可以访问localhost:8080查看
+
+关联tomcat至eclipse
+	下载eclipse for java EE，安装    F:/eclipse
+	workspace F:/workspace/java
+	set
+		window->prefrences.server.runtimeEnviornments->add
+		选择对应版本的tomcat，然后添加解压目录
+	新建动态java工程，dynamic web project
+	工程目录描述
+		deployment descriptor：部署的描述
+		Web App Libraries：依赖外部包
+		build：放入编译之后的文件
+		WebContent:web页面
+	在webContent中新建jsp文件，设置编码UTF-8，右键->prefrences
+		window->prefrences->General.contentType  jsp-->utf-8
+	右键项目，Run as->Run on server
+		localhost:8080/projectName/file... 就可以访问了
+
+JSP
+	JSP处理流程
+		客户端发送.jsp请求
+		Web服务器识别到是JSP请求，将该请求传递给JSP引擎。
+		JSP引擎从磁盘中载入JSP文件，然后将它们转化为Servlet。即将模板文本用println()语句，JSP元素转化成Java代码。
+		JSP引擎将Servlet编译成可执行类，并且将原始请求传递给Servlet引擎。
+		Web服务器组件调用Servlet引擎，然后载入并执行Servlet类。
+			在执行过程中，Servlet产生HTML格式的输出并将其内嵌于HTTP response中上交给Web服务器。
+		Web服务器以静态HTML网页的形式将HTTP response返回到客户端
+		客户端获得页面，与静态HTML相同
+
+		JSP引擎会检查JSP文件对应的Servlet是否已经存在，并且检查JSP文件的修改日期是否早于Servlet。
+		如果JSP文件的修改日期早于对应的Servlet，那么容器就可以确定JSP文件没有被修改过并且Servlet 有效。这使得整个流程与其他脚本语言（比如 PHP）相比要高效快捷一些。
+
+	JSP生命周期
+		编译阶段：
+			servlet容器编译servlet源文件，生成servlet类.
+			JSP会首先检查是否已经编译，且编译是否有效。编译过程如下：
+				解析JSP文件
+				将JSP文件转换为Servlet
+				编译servlet
+		初始化阶段：
+			加载与JSP对应的servlet类，创建其实例，并调用它的初始化方法
+			执行 jspInit() 方法，可重写自定义 
+		执行阶段：
+			调用与JSP对应的servlet实例的服务方法
+		销毁阶段：
+			调用与JSP对应的servlet实例的销毁方法，然后销毁servlet实例
+			执行jspDestroy() 方法，可重写自定义
+
+	语法 
+		代码片段
+			<%  code here %>   也可以用 <jsp:scriptlet> ... </jsp:scriptlet>
+		声明  变量和方法声明
+			<%! var and method here %>  |  <jsp:declaration>...</jsp:declaration>
+		表达式
+			<%= output here %>   |  <jsp:expression>...</jsp:expression>
+		注释
+			<%--  comment here --%>  不会被编译，生成的HTML页面中不存在
+		指令
+			<%@ %>
+			<%@ page...%> 定义页面的依赖属性，比如脚本语言、error页面、缓存需求等等
+			<%@ include ... %>	包含其他文件
+			<%@ taglib ... %>	引入标签库的定义，可以是自定义标签
+		行为 
+			jsp:include			用于在当前页面中包含静态或动态资源
+			jsp:useBean			寻找和初始化一个JavaBean组件
+			jsp:setProperty		设置 JavaBean组件的值
+			jsp:getProperty		将 JavaBean组件的值插入到 output中
+			jsp:forward			从一个JSP文件向另一个文件传递一个包含用户请求的request对象
+			jsp:plugin			用于在生成的HTML页面中包含Applet和JavaBean对象
+			jsp:element			动态创建一个XML元素
+			jsp:attribute		定义动态创建的XML元素的属性
+			jsp:body			定义动态创建的XML元素的主体
+			jsp:text			用于封装模板数据
+		九大隐含对象，可以直接使用
+			request			HttpServletRequest类的实例
+			response		HttpServletResponse类的实例
+			out				PrintWriter类的实例，用于把结果输出至网页上
+			session			HttpSession类的实例
+			application		ServletContext类的实例，与应用上下文有关
+			config			ServletConfig类的实例
+			pageContext		PageContext类的实例，提供对JSP页面所有对象以及命名空间的访问
+			page			类似于Java类中的this关键字
+			Exception		Exception类的对象，代表发生错误的JSP页面中对应的异常对象
+
+
+	过滤器  Java类
+		可以附加在Servlet、JSP或HTML上，做一些操作
+		作用
+			在客户端的请求访问后端资源之前，拦截这些请求。
+			在服务器的响应发送回客户端之前，处理这些响应。
+		类型
+			身份验证过滤器（Authentication Filters）
+			数据压缩过滤器（Data compression Filters）
+			加密过滤器（Encryption Filters）
+			触发资源访问事件过滤器
+			图像转换过滤器（Image Conversion Filters）
+			日志记录和审核过滤器（Logging and Auditing Filters）
+			MIME-TYPE 链过滤器（MIME-TYPE Chain Filters）
+			标记化过滤器（Tokenizing Filters）
+			XSL/T 过滤器（XSL/T Filters），转换 XML 内容
+		doFilter 
+			该方法处理filter事宜
