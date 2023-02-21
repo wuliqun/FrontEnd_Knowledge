@@ -1,5 +1,0 @@
-vue-cli
-	npm install -g vue-cli
-	在项目目录下，直接vue init webpack peoject_name新建项目模板，webpack为常用模板
-	根据提示选择配置
-

@@ -380,6 +380,8 @@ VueRouter
 		this.$router.push({ name: 'news', params: { userId: 123 }})
 		接收
 			this.$route.params.userId
+
+			
 		this.$router.push({ path: '/news', query: { userId: 123 }});
 		接收
 			this.$route.query.userId
